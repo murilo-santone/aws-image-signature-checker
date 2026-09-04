@@ -1,48 +1,114 @@
-# S3 Signature Validator
+# 🔎 Validador de Arquivos no AWS S3
 
-Um utilitário de alta performance desenvolvido em Python para validação em massa (lote) de integridade de arquivos em buckets AWS S3. 
+Projeto desenvolvido em **Python** para validar em lote a existência de arquivos armazenados no **Amazon S3**, utilizando paginação e processamento paralelo para trabalhar com grandes volumes de registros.
 
-Este projeto foi desenhado para resolver o gargalo de auditar mais de 1.000.000 registros exportados de um banco de dados relacional, validando a existência física dos documentos na nuvem sem comprometer a memória da máquina e reduzindo o tempo de I/O de rede.
+A aplicação recebe uma base de dados contendo as chaves dos arquivos, consulta o bucket configurado e gera um relatório com o resultado das validações.
 
-## 🏗️ Arquitetura e Estratégia
+---
 
-Para lidar com a alta volumetria de dados, a arquitetura foi baseada em três pilares:
+## 🎯 Objetivo
 
-1. **Memory Control (Paginação):** O dataset original é processado através do Pandas utilizando fatiamento (lotes de 5.000 registros). Isso impede o estouro de memória RAM (OOM) durante execuções prolongadas.
-2. **Concorrência (Multi-threading):** O gargalo de I/O gerado pela latência de rede na comunicação com a AWS é mitigado utilizando o `ThreadPoolExecutor`. Cada lote abre dezenas de conexões simultâneas para validar as URIs.
-3. **Fault Tolerance (Resiliência):** O pipeline possui programação defensiva. Exceções geradas por interrupções de rede ou dados corrompidos na origem (SQL) são capturadas individualmente por thread, impedindo a quebra do lote (Graceful Degradation).
+Automatizar a validação de grandes volumes de arquivos no Amazon S3, evitando verificações manuais e permitindo identificar rapidamente registros cujos arquivos existem ou não no bucket.
 
-## 🛠️ Tecnologias Utilizadas
+---
 
-- **Python 3.x:** Linguagem base.
-- **Pandas:** Ingestão, tratamento estruturado e exportação de dados.
-- **Boto3 (AWS SDK):** Interface de comunicação com o Amazon S3.
-- **Concurrent.Futures:** Orquestração de threads.
-- **Pytest:** Cobertura de testes unitários para regras de sanitização de strings.
+## ⚙️ Funcionamento
 
-## 🚀 Guia de Execução
+O processo executa as seguintes etapas:
 
-### 1. Preparando o Ambiente
-Recomenda-se a utilização de um ambiente virtual (venv). Instale as dependências executando:
+1. Carrega os registros de entrada.
+2. Processa os dados em lotes.
+3. Consulta os arquivos no Amazon S3.
+4. Utiliza processamento paralelo para acelerar as validações.
+5. Consolida os resultados.
+6. Gera um arquivo final com o status de cada registro.
+
+---
+
+## 🛠️ Tecnologias utilizadas
+
+- Python
+- Pandas
+- Boto3
+- Amazon S3
+- ThreadPoolExecutor
+- dotenv
+
+---
+
+## 📁 Estrutura do projeto
+
+```text
+.
+├── main.py
+├── services.py
+├── config.py
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── tests/
+```
+
+---
+
+## 🔐 Configuração
+
+As credenciais e configurações da AWS são carregadas por variáveis de ambiente.
+
+Crie um arquivo `.env` na raiz do projeto com base no arquivo `.env.example`:
+
+```env
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=us-east-1
+S3_BUCKET_NAME=your_bucket_name_here
+```
+
+> O arquivo `.env` contém informações sensíveis e não deve ser versionado. O repositório mantém apenas o `.env.example`, contendo valores de exemplo.
+
+---
+
+## 📦 Instalação
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/murilo-santone/aws-image-signature-checker.git
+cd aws-image-signature-checker
+```
+
+Instale as dependências:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configuração de Credenciais
-Crie um arquivo .env na raiz do diretório do projeto, baseando-se no arquivo .env.example:
+Configure o arquivo `.env` e execute:
 
-```bash
-AWS_ACCESS_KEY_ID=sua_chave_aqui
-AWS_SECRET_ACCESS_KEY=seu_secret_aqui
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=nome_do_seu_bucket
-```
-
-### 3. Execução
-Com os arquivos de entrada (CSV) posicionados no diretório configurado, inicie o pipeline:
 ```bash
 python main.py
 ```
 
-O script fornecerá logs de progresso no terminal e, ao final, exportará um relatório .xlsx contendo exclusivamente os registros que falharam na validação (arquivos não encontrados ou erros de leitura).
+---
+
+## ⚡ Processamento
+
+O projeto utiliza paginação e processamento paralelo para permitir a validação de grandes volumes de registros sem carregar todo o processamento de uma única vez.
+
+As consultas ao Amazon S3 são distribuídas entre múltiplas threads, reduzindo o tempo necessário para validar os arquivos.
+
+---
+
+## 📊 Resultado
+
+Ao final da execução, é gerado um arquivo contendo os registros processados e o resultado da validação de cada arquivo no Amazon S3.
+
+O projeto foi estruturado a partir de um cenário de validação em grande volume, com foco em automação, processamento em lote e integração com serviços AWS.
+
+---
+
+## 👨‍💻 Autor
+
+**Murilo Santone**
+
+[LinkedIn](https://www.linkedin.com/in/murilo-santone/)
